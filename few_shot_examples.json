@@ -1,0 +1,32 @@
+{
+  "examples": [
+    {
+      "question_id": 60839687,
+      "question_title": "using third part modules in IBM quantum experience",
+      "question_body": "is there something i can do to use NumPy in IBM quantum experience? I have searched on google but i couldn't find anything. I thought about coping the source code, any suggestion?",
+      "question_tags": "",
+      "answer_body": "NumPy is one of the pre-installed packages (it's a pre-requisite for Qiskit, for one thing). You should be able to just do import numpy from your Jupyter notebook.",
+      "question_summary": "Q: using third part modules in IBM quantum experience\nContext: is there something i can do to use NumPy in IBM quantum experience? I have searched on google but i couldn't find anything. I thought about coping the source code, any suggestion?",
+      "answer_summary": "A: NumPy is one of the pre-installed packages (it's a pre-requisite for Qiskit, for one thing). You should be able to just do import numpy from your Jupyter notebook.",
+      "question_date": "3/24/2020 21:34",
+      "answer_date": "3/25/2020 12:25"
+    },
+    {
+      "question_id": 12073,
+      "question_title": "How to reduce unnecessary waiting time when using IBM's backend?",
+      "question_body": "I'm working with a program, which needs iterations of quantum computation like this def quantum(n): Grover(oracle).run(QuantumInstance(...)) #n is input size associated with oracle, #and some other components are omitted. for n in range(0,10): start = time.time() quantum(n) end = time.time() Now I have to wait for hours to run this on the 16-qubit quantum computer. So is there any way to pack all computation into one round?",
+      "question_tags": "",
+      "answer_body": "Assuming your quantum() method creates a circuit, you can run lots of circuits in one go by using the execute command. For example execute([grover_1, grover_2, grover_3], backed=my_backend).",
+      "question_summary": "Q: How to reduce unnecessary waiting time when using IBM's backend?\nContext: I'm working with a program, which needs iterations of quantum computation like this def quantum(n): Grover(oracle).run(QuantumInstance(...)) #n is input size associated with oracle, #and some other co...",
+      "answer_summary": "A: Assuming your quantum() method creates a circuit, you can run lots of circuits in one go by using the execute command. For example execute([grover_1, grover_2, grover_3], backed=my_backend).",
+      "question_date": "5/19/2020 8:41",
+      "answer_date": "5/19/2020 10:03"
+    }
+  ],
+  "selected_question_ids": [
+    12073,
+    60839687
+  ],
+  "total_examples": 2,
+  "selection_timestamp": "2025-09-23T19:27:31.380376"
+}

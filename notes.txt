@@ -1,0 +1,90 @@
+## 📊 Dataset
+
+The pipeline processes a quantum computing Q&A dataset with the following structure:
+
+- **Original Dataset**: `Quantum_Dataset 26-06-2024.csv` (2,832 rows)
+- **Filtered Dataset**: `filtered_quantum_dataset.csv` (1,205 rows after removing href references)
+
+### Dataset Statistics
+
+- **Original rows**: 2,832
+- **Filtered rows**: 1,205 (57.4% reduction)
+- **Removed rows**: 1,627 (contained href references)
+- **Questions with multiple answers**: 33
+- **Unique questions**: 1,158
+- **Date range**: 2010-02-13 to 2024-05-15
+
+
+## 🎯 Prompt Templates
+
+### Prompt 1 (`prompt1.txt`)
+- **Style**: Educational and comprehensive
+- **Format**: JSON with answer, key_concepts, difficulty_level, related_topics
+- **Focus**: Clear explanations with technical depth
+
+### Prompt 2 (`prompt2.txt`)
+- **Style**: Technical and research-oriented
+- **Format**: JSON with answer, technical_depth, core_principles, practical_applications, current_challenges, future_implications
+- **Focus**: Advanced technical analysis
+
+## 📈 Results
+
+### Performance Metrics (First 10 Rows)
+
+- **Total questions processed**: 10
+- **Prompt 1 success rate**: 50.0% (5/10)
+- **Prompt 2 success rate**: 60.0% (6/10)
+- **Combined success rate**: 80.0% (8/10 had at least one successful response)
+
+### Output Format
+
+The generated dataset includes:
+
+- **Original data**: QuestionTitle, QuestionBody, QuestionTags, QuestionDate, AcceptedAnswerId, AnswerId, Answer Body, AnswerDate
+- **Generated answers**: answer_generated_by_q1, answer_generated_by_q2
+- **Metadata**: Success flags, error messages, generation timestamps
+- **Quality metrics**: JSON parsing success, response validation
+
+## 🔍 Example Usage
+
+```python
+from run_pipeline import run_pipeline_on_first_n_rows, save_results
+
+# Run pipeline on first 5 rows
+results = run_pipeline_on_first_n_rows(
+    filtered_file="filtered_quantum_dataset.csv",
+    examples_file="few_shot_examples.json",
+    num_rows=5,
+    start_row=0
+)
+
+# Save results
+save_results(results, "my_results.csv")
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Ollama not running**:
+   ```bash
+   ollama serve
+   ```
+
+2. **Model not available**:
+   ```bash
+   ollama pull deepseek-r1:32b
+   ```
+
+3. **Timeout errors**:
+   - Increase timeout in `ollama_integration.py` (default: 180s)
+   - Check system resources and model performance
+
+4. **JSON parsing errors**:
+   - Check prompt templates for proper JSON format instructions
+   - Review `json_extraction.py` for parsing logic
+
+5. **Encoding errors**:
+   - The pipeline automatically handles multiple encodings
+   - Check file encoding if issues persist
+
