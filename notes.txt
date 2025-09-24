@@ -1,19 +1,61 @@
-## 📊 Dataset
+# 🚀 Quantum Q&A LLM Pipeline - Complete Process Documentation
+
+## 📊 Dataset Overview
 
 The pipeline processes a quantum computing Q&A dataset with the following structure:
 
 - **Original Dataset**: `Quantum_Dataset 26-06-2024.csv` (2,832 rows)
-- **Filtered Dataset**: `filtered_quantum_dataset.csv` (1,205 rows after removing href references)
+- **Filtered Dataset**: `filtered_quantum_dataset_with_tags.csv` (1,205 rows after cleaning)
+- **Final Output**: `generated_answers_with_tags_first_200_rows.csv` (200 processed rows)
 
-### Dataset Statistics
 
-- **Original rows**: 2,832
-- **Filtered rows**: 1,205 (57.4% reduction)
-- **Removed rows**: 1,627 (contained href references)
-- **Questions with multiple answers**: 33
-- **Unique questions**: 1,158
-- **Date range**: 2010-02-13 to 2024-05-15
+## 🏗️ Complete Pipeline Architecture
 
+### Core Classes and Functions
+
+#### 1. **Data Filtering Module** (`data_filtering.py`)
+- **Class**: `QuantumDataFilter`
+- **Key Functions**:
+  - `filter_dataset_with_tags()`: Main filtering function that removes rows with href references
+  - `clean_text_content()`: Cleans text content while preserving tags
+  - `validate_question_data()`: Validates question structure and completeness
+
+#### 2. **Text Cleaning Module** (`text_cleaning.py`)
+- **Key Functions**:
+  - `clean_question_content()`: Cleans question title, body, and tags
+  - `clean_answer_content()`: Cleans answer content
+  - `remove_html_tags()`: Removes HTML markup from text
+  - `normalize_whitespace()`: Normalizes whitespace characters
+
+#### 3. **Few-Shot Selection Module** (`few_shot_selection.py`)
+- **Key Functions**:
+  - `select_diverse_examples()`: Selects diverse examples for few-shot learning
+  - `create_few_shot_prompt()`: Creates formatted few-shot prompts
+  - `calculate_diversity_score()`: Calculates diversity between examples
+
+#### 4. **Ollama Integration Module** (`ollama_integration.py`)
+- **Class**: `OllamaDeepSeek`
+- **Key Methods**:
+  - `__init__()`: Initialize client with model configuration
+  - `generate_response()`: Generate raw response from Ollama API
+  - `generate_quantum_answer()`: Generate structured quantum Q&A responses
+  - `test_connection()`: Test Ollama service and model availability
+  - `batch_generate_answers()`: Process multiple questions in batch
+
+#### 5. **JSON Extraction Module** (`json_extraction.py`)
+- **Key Functions**:
+  - `parse_llm_response()`: Parse LLM response and extract JSON
+  - `extract_json_from_text()`: Extract JSON from mixed text content
+  - `validate_json_structure()`: Validate extracted JSON structure
+  - `clean_json_string()`: Clean and normalize JSON strings
+
+#### 6. **Main Pipeline Module** (`run_pipeline.py`)
+- **Key Functions**:
+  - `run_pipeline_with_tags_preserved()`: Main pipeline function with tag preservation
+  - `run_pipeline_on_first_n_rows()`: Process specific number of rows
+  - `load_examples_from_json()`: Load few-shot examples from JSON file
+  - `create_few_shot_prompt()`: Create formatted prompts with examples
+  - `save_results()`: Save results to CSV with proper escaping
 
 ## 🎯 Prompt Templates
 
@@ -27,64 +69,254 @@ The pipeline processes a quantum computing Q&A dataset with the following struct
 - **Format**: JSON with answer, technical_depth, core_principles, practical_applications, current_challenges, future_implications
 - **Focus**: Advanced technical analysis
 
-## 📈 Results
+## 📋 Complete Column Descriptions for `generated_answers_with_tags_first_200_rows.csv`
 
-### Performance Metrics (First 10 Rows)
+### Original Dataset Columns
+1. **`row_number`**: Sequential row number in the processed dataset (1-200)
+2. **`question_id`**: Unique identifier for each question from Stack Overflow
+3. **`question_title`**: The main title/subject of the question
+4. **`question_body`**: Detailed description and context of the question
+5. **`question_tags`**: Comma-separated tags associated with the question (e.g., quantum-computing, qiskit)
+6. **`question_date`**: Date when the question was posted on Stack Overflow
+7. **`accepted_answer_id`**: ID of the accepted answer (if any)
+8. **`answer_id`**: ID of the specific answer being referenced
+9. **`answer_body`**: The actual answer text from Stack Overflow
+10. **`answer_date`**: Date when the answer was posted
 
-- **Total questions processed**: 10
-- **Prompt 1 success rate**: 50.0% (5/10)
-- **Prompt 2 success rate**: 60.0% (6/10)
-- **Combined success rate**: 80.0% (8/10 had at least one successful response)
+### Generated Content Columns
+11. **`answer_generated_by_q1`**: AI-generated answer using Prompt 1 (educational style)
+12. **`answer_generated_by_q2`**: AI-generated answer using Prompt 2 (technical style)
+13. **`raw_response_prompt1`**: Complete raw response from LLM for Prompt 1 (including JSON structure)
+14. **`raw_response_prompt2`**: Complete raw response from LLM for Prompt 2 (including JSON structure)
 
-### Output Format
+### Status and Metadata Columns
+15. **`prompt1_success`**: Boolean indicating if Prompt 1 generation was successful
+16. **`prompt2_success`**: Boolean indicating if Prompt 2 generation was successful
+17. **`prompt1_error`**: Error message if Prompt 1 generation failed (empty if successful)
+18. **`prompt2_error`**: Error message if Prompt 2 generation failed (empty if successful)
+19. **`prompt1_metadata`**: JSON metadata from Prompt 1 response (parsed structure)
+20. **`prompt2_metadata`**: JSON metadata from Prompt 2 response (parsed structure)
+21. **`generation_timestamp`**: ISO timestamp when the generation process completed
 
-The generated dataset includes:
+## 🔄 Complete Process Flow
 
-- **Original data**: QuestionTitle, QuestionBody, QuestionTags, QuestionDate, AcceptedAnswerId, AnswerId, Answer Body, AnswerDate
-- **Generated answers**: answer_generated_by_q1, answer_generated_by_q2
-- **Metadata**: Success flags, error messages, generation timestamps
-- **Quality metrics**: JSON parsing success, response validation
+### Step 1: Data Preparation
+1. **Load Original Dataset**: Read `Quantum_Dataset 26-06-2024.csv`
+2. **Filter Data**: Use `filter_dataset_with_tags()` to remove problematic rows
+3. **Clean Text**: Apply `clean_question_content()` and `clean_answer_content()`
+4. **Save Filtered Dataset**: Create `filtered_quantum_dataset_with_tags.csv`
+
+### Step 2: Few-Shot Example Selection
+1. **Load Examples**: Use `load_examples_from_json()` to load pre-selected examples
+2. **Validate Examples**: Ensure examples are diverse and representative
+3. **Create Prompt Templates**: Format examples for few-shot learning
+
+### Step 3: LLM Integration Setup
+1. **Initialize Client**: Create `OllamaDeepSeek()` instance
+2. **Test Connection**: Verify Ollama service and model availability
+3. **Load Prompts**: Load `prompt1.txt` and `prompt2.txt` templates
+
+### Step 4: Batch Processing
+1. **Select Rows**: Choose 200 rows excluding example rows
+2. **For Each Row**:
+   - Clean question data using `clean_question_content()`
+   - Create few-shot prompt using `create_few_shot_prompt()`
+   - Generate response with Prompt 1 using `generate_quantum_answer()`
+   - Generate response with Prompt 2 using `generate_quantum_answer()`
+   - Parse responses using `parse_llm_response()`
+   - Combine all data into result dictionary
+
+### Step 5: Data Export
+1. **Clean Raw Responses**: Escape special characters, newlines, and quotes
+2. **Create DataFrame**: Convert results to pandas DataFrame
+3. **Save CSV**: Export with proper CSV quoting using `save_results()`
+
+============================================================
+RESULTS SAVED TO: generated_answers_with_tags_first_200_rows.csv
+============================================================
+Total rows processed: 200
+Prompt 1 success rate: 108/200 (54.0%)
+Prompt 2 success rate: 109/200 (54.5%)
+
+Pipeline completed successfully!
+Results saved to: generated_answers_with_tags_first_200_rows.csv
+
+SUMMARY:
+Total questions processed: 200
+Prompt 1 success: 108/200 (54.0%)
+Prompt 2 success: 109/200 (54.5%)
+
+## 🔧 Technical Implementation Details
+
+### CSV Escaping Strategy
+- **Newlines**: Replaced with spaces to prevent row breaks
+- **Quotes**: Escaped by doubling (`"` becomes `""`)
+- **Special Characters**: Removed tabs and null characters
+- **Whitespace**: Normalized multiple spaces to single spaces
+- **CSV Quoting**: All fields quoted using `quoting=1` parameter
+
+### Error Handling
+- **Connection Errors**: Graceful handling of Ollama service unavailability
+- **Timeout Errors**: 180-second timeout with proper error messages
+- **JSON Parsing Errors**: Fallback to raw response if JSON parsing fails
+- **Encoding Errors**: Multiple encoding attempts for file reading
+
+### Memory Management
+- **Batch Processing**: Process one question at a time to manage memory
+- **Data Cleaning**: Remove unnecessary data after processing
+- **CSV Streaming**: Write results incrementally to prevent memory overflow
 
 ## 🔍 Example Usage
 
+### Basic Pipeline Execution
 ```python
-from run_pipeline import run_pipeline_on_first_n_rows, save_results
+from run_pipeline import run_pipeline_with_tags_preserved, save_results
 
-# Run pipeline on first 5 rows
-results = run_pipeline_on_first_n_rows(
-    filtered_file="filtered_quantum_dataset.csv",
+# Run complete pipeline with tags preserved
+results = run_pipeline_with_tags_preserved(
+    input_file="Quantum_Dataset 26-06-2024.csv",
     examples_file="few_shot_examples.json",
-    num_rows=5,
+    num_rows=200,
     start_row=0
 )
 
-# Save results
-save_results(results, "my_results.csv")
+# Save results with proper CSV escaping
+save_results(results, "generated_answers_with_tags_first_200_rows.csv")
+```
+
+### Custom Row Processing
+```python
+from run_pipeline import run_pipeline_on_first_n_rows
+
+# Process specific number of rows
+results = run_pipeline_on_first_n_rows(
+    filtered_file="filtered_quantum_dataset_with_tags.csv",
+    examples_file="few_shot_examples.json",
+    num_rows=50,
+    start_row=100  # Start from row 100
+)
+```
+
+### Individual Module Usage
+```python
+from ollama_integration import OllamaDeepSeek
+from json_extraction import parse_llm_response
+from text_cleaning import clean_question_content
+
+# Initialize Ollama client
+client = OllamaDeepSeek()
+
+# Clean question data
+cleaned_question = clean_question_content(
+    title="What is quantum computing?",
+    body="I want to understand quantum computing basics...",
+    tags="quantum-computing, beginner"
+)
+
+# Generate response
+result = client.generate_quantum_answer(
+    question_data=cleaned_question,
+    few_shot_examples=examples,
+    prompt_template=prompt1
+)
+
+# Parse response
+parsed = parse_llm_response(result['raw_response'])
 ```
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
-1. **Ollama not running**:
+1. **Ollama Service Not Running**:
    ```bash
+   # Start Ollama service
    ollama serve
+   
+   # Check if running
+   curl http://localhost:11434/api/tags
    ```
 
-2. **Model not available**:
+2. **Model Not Available**:
    ```bash
+   # Pull the required model
    ollama pull deepseek-r1:32b
+   
+   # List available models
+   ollama list
    ```
 
-3. **Timeout errors**:
-   - Increase timeout in `ollama_integration.py` (default: 180s)
+3. **Timeout Errors**:
+   - Increase timeout in `OllamaDeepSeek.__init__()` (default: 180s)
    - Check system resources and model performance
+   - Consider using a smaller model for faster responses
 
-4. **JSON parsing errors**:
+4. **JSON Parsing Errors**:
    - Check prompt templates for proper JSON format instructions
    - Review `json_extraction.py` for parsing logic
+   - Use `raw_response_prompt1` and `raw_response_prompt2` columns for debugging
 
-5. **Encoding errors**:
+5. **CSV Formatting Issues**:
+   - The pipeline automatically handles CSV escaping
+   - Raw responses are cleaned of newlines and special characters
+   - All fields are properly quoted using `quoting=1`
+
+6. **Memory Issues**:
+   - Process smaller batches (reduce `num_rows` parameter)
+   - Monitor system memory usage
+   - Consider processing in chunks
+
+7. **Encoding Errors**:
    - The pipeline automatically handles multiple encodings
    - Check file encoding if issues persist
+   - Use UTF-8 encoding for all text files
+
+## 📊 Data Quality and Validation
+
+### Input Data Validation
+- **Question Completeness**: Ensures title, body, and tags are present
+- **Content Filtering**: Removes rows with href references and malformed data
+- **Tag Preservation**: Maintains original tag structure for analysis
+
+### Output Data Validation
+- **Response Success Tracking**: Boolean flags for each prompt
+- **Error Logging**: Detailed error messages for failed generations
+- **Metadata Preservation**: Complete JSON metadata from LLM responses
+- **Timestamp Tracking**: ISO timestamps for all generated content
+
+### Quality Metrics
+- **Success Rates**: Track success rates for each prompt type
+- **Error Analysis**: Categorize and analyze generation failures
+- **Response Length**: Monitor generated response lengths
+- **Processing Time**: Track time per question and total processing time
+
+## 🔄 Pipeline Maintenance
+
+### Regular Updates
+- **Model Updates**: Update Ollama model versions as needed
+- **Prompt Refinement**: Iteratively improve prompt templates
+- **Example Selection**: Update few-shot examples for better performance
+- **Error Handling**: Improve error handling based on observed issues
+
+### Performance Optimization
+- **Batch Size Tuning**: Optimize batch sizes for memory and speed
+- **Timeout Adjustment**: Adjust timeouts based on model performance
+- **Caching**: Implement response caching for repeated queries
+- **Parallel Processing**: Consider parallel processing for large datasets
+
+## 📈 Future Enhancements
+
+### Planned Features
+- **Response Quality Scoring**: Implement automated quality assessment
+- **Multi-Model Support**: Support for multiple LLM providers
+- **Interactive Mode**: Command-line interface for interactive processing
+- **Web Interface**: Web-based interface for pipeline management
+- **Advanced Filtering**: More sophisticated data filtering options
+- **Export Formats**: Support for additional export formats (JSON, XML)
+
+### Research Extensions
+- **Comparative Analysis**: Compare different prompt strategies
+- **Domain Adaptation**: Adapt for other technical domains
+- **Evaluation Metrics**: Implement comprehensive evaluation metrics
+- **A/B Testing**: Framework for testing different configurations
 
