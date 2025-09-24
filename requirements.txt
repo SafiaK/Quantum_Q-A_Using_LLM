@@ -1,0 +1,32 @@
+# Quantum Q&A LLM Pipeline Requirements
+# Core dependencies for the quantum computing Q&A generation and analysis pipeline
+
+# Data processing and analysis
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Machine Learning and NLP
+scikit-learn>=1.1.0
+sentence-transformers>=2.2.0
+
+# HTTP requests for Ollama integration
+requests>=2.28.0
+
+# JSON processing (built-in, but listed for clarity)
+# json - built-in module
+
+# Text processing and regex (built-in, but listed for clarity)
+# re - built-in module
+# difflib - built-in module
+
+# Optional: For advanced text processing (if needed)
+# nltk>=3.8
+# spacy>=3.4.0
+
+# Development and testing (optional)
+# pytest>=7.0.0
+# jupyter>=1.0.0
+
+# Note: Ollama needs to be installed separately
+# Install Ollama from: https://ollama.ai/
+# Then run: ollama pull deepseek-r1:32b

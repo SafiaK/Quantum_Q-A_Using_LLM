@@ -9,6 +9,9 @@ A comprehensive pipeline for generating quantum computing answers using few-shot
 - **Few-Shot Learning**: Uses 2 examples from the dataset for context
 - **Dual Prompt Templates**: Two different prompting strategies for comparison
 - **Robust JSON Parsing**: Handles various response formats from the LLM
+- **Semantic Analysis**: Advanced similarity analysis using sentence transformers
+- **Answer Quality Assessment**: Comprehensive evaluation of generated answers
+- **Raw Response Capture**: Stores complete LLM responses for analysis
 - **Modular Design**: Separate modules for each pipeline component
 - **Ollama Integration**: Works with local Ollama DeepSeek model
 
@@ -24,11 +27,15 @@ A comprehensive pipeline for generating quantum computing answers using few-shot
 ├── run_pipeline.py                # Main pipeline execution script
 ├── run_first_10.py                # Script to run on first 10 rows
 ├── main_pipeline.py               # Original comprehensive pipeline
+├── quantum_qa_analysis.py         # Comprehensive data analysis utility
 ├── prompt1.txt                    # First prompt template
 ├── prompt2.txt                    # Second prompt template
 ├── few_shot_examples.json         # Selected few-shot examples
 ├── filtered_quantum_dataset.csv   # Filtered dataset (no href references)
-└── generated_answers_first_10_rows.csv  # Generated answers output
+├── generated_answers_first_10_rows.csv  # Generated answers output
+├── generated_answers_with_tags_first_200_rows.csv  # Full dataset results
+├── quantum_qa_analysis_report.txt # Analysis report with similarity scores
+└── requirements.txt               # Python dependencies
 ```
 
 ## 🛠️ Installation
@@ -41,15 +48,23 @@ A comprehensive pipeline for generating quantum computing answers using few-shot
 
 ### Setup
 
-1. **Install Python dependencies:**
+1. **Clone the repository:**
    ```bash
-   pip install pandas requests
+   git clone https://github.com/SafiaK/Quantum_Q-A_Using_LLM.git
+   cd Quantum_Q-A_Using_LLM
    ```
 
-2. **Install and setup Ollama:**
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Install and setup Ollama:**
    ```bash
    # Install Ollama (macOS)
    brew install ollama
+   
+   # Or download from https://ollama.ai/
    
    # Start Ollama service
    ollama serve
@@ -58,7 +73,7 @@ A comprehensive pipeline for generating quantum computing answers using few-shot
    ollama pull deepseek-r1:32b
    ```
 
-3. **Verify installation:**
+4. **Verify installation:**
    ```bash
    python3 ollama_integration.py
    ```
@@ -97,6 +112,39 @@ python3 run_first_10.py
 
 This creates `generated_answers_first_10_rows.csv` with generated answers.
 
+### 4. Run Analysis
+
+Analyze the generated answers with semantic similarity:
+
+```bash
+python3 quantum_qa_analysis.py
+```
+
+This creates `quantum_qa_analysis_report.txt` with detailed analysis including:
+- Success rate analysis
+- Semantic similarity scores using sentence transformers
+- Answer quality assessment
+- Prompt comparison statistics
+
+## 📊 Analysis Features
+
+### Semantic Similarity Analysis
+- Uses sentence-transformers (all-MiniLM-L6-v2) for accurate semantic comparison
+- Compares generated answers with original Stack Overflow answers
+- Provides similarity scores between 0-1 (higher = more similar)
+- Handles different writing styles and phrasings
+
+### Success Rate Analysis
+- Raw response generation rates
+- JSON parsing success rates
+- Answer extraction from raw responses
+- Combined success metrics
+
+### Quality Assessment
+- Average similarity scores per prompt
+- Similarity range and distribution
+- Prompt comparison (which performs better)
+- Extraction success rates
 
 ## 📋 Pipeline Components
 
