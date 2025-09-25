@@ -3,7 +3,7 @@
 
 ## Dataset Overview
 - **Total Rows**: 200
-- **Analysis Date**: 2025-09-24 11:04:39
+- **Analysis Date**: 2025-09-25 23:03:28
 
 ## Success Rate Analysis
 
@@ -22,23 +22,23 @@
 
 ### Prompt 1 Quality Metrics
 - **Total Processed**: 200
-- **Answer Extraction Success**: 56 (28.0%)
-- **Average Similarity to Original**: 0.621
-- **Median Similarity**: 0.622
+- **Answer Extraction Success**: 200 (100.0%)
+- **Average Similarity to Original**: 0.618
+- **Median Similarity**: 0.619
 - **Similarity Range**: 0.221 - 0.852
 
 ### Prompt 2 Quality Metrics
 - **Total Processed**: 200
-- **Answer Extraction Success**: 65 (32.5%)
+- **Answer Extraction Success**: 200 (100.0%)
 - **Average Similarity to Original**: 0.627
-- **Median Similarity**: 0.647
+- **Median Similarity**: 0.641
 - **Similarity Range**: 0.250 - 0.893
 
 ### Prompt Comparison
-- **Prompt 1 Better Similarity**: 31 cases
-- **Prompt 2 Better Similarity**: 22 cases
+- **Prompt 1 Better Similarity**: 26 cases
+- **Prompt 2 Better Similarity**: 34 cases
 - **Tie Similarity**: 0 cases
-- **Average Similarity Difference**: -0.007
+- **Average Similarity Difference**: -0.009
 
 
 ---

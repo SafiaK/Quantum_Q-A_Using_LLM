@@ -174,7 +174,7 @@ class QuantumQAAnalyzer:
             
         except Exception as e:
             print(f"Warning: Could not extract answer from raw response: {e}")
-            return None
+            return cleaned_response.strip()
     
     def preprocess_text(self, text: str) -> str:
         """
@@ -314,6 +314,16 @@ class QuantumQAAnalyzer:
                 generated_answer = self.extract_answer_from_raw_response(row[raw_col])
                 if generated_answer:
                     extraction_success += 1
+                else:
+                    print("============================================================")
+                    print(raw_col)
+                    print(f"Warning: Could not extract answer from raw response: {row[raw_col]}")
+                    print("============================================================")
+                    exit()
+
+            else:
+                extraction_success += 1
+                    
             
             # Calculate similarity for ALL rows with both answers
             if generated_answer and original_answer:
@@ -472,6 +482,112 @@ class QuantumQAAnalyzer:
         
         return report
     
+    def create_final_analysis_dataframe(self) -> pd.DataFrame:
+        """
+        Create a final analysis dataframe with original columns and final answers with similarity scores
+        
+        Returns:
+            DataFrame with original columns plus final answers and similarity scores
+        """
+        print("\n" + "="*60)
+        print("📊 CREATING FINAL ANALYSIS DATAFRAME")
+        print("="*60)
+        
+        # Start with original dataframe
+        final_df = self.df.copy()
+        
+        # Initialize new columns
+        final_df['final_answer_generated_by_prompt1'] = ''
+        final_df['final_answer_generated_by_prompt2'] = ''
+        final_df['similarity_score_of_answer_of_prompt1'] = 0.0
+        final_df['similarity_score_of_answer_of_prompt2'] = 0.0
+        
+        print(f"Processing {len(final_df)} rows for final analysis...")
+        
+        for idx, row in final_df.iterrows():
+            # Get original answer
+            original_answer = row['answer_body'] if not pd.isna(row['answer_body']) else ''
+            
+            # Process Prompt 1
+            if not pd.isna(row['raw_response_prompt1']) and row['raw_response_prompt1'] != '':
+                # Try to get answer from generated column first
+                generated_answer_p1 = row['answer_generated_by_q1'] if not pd.isna(row['answer_generated_by_q1']) else ''
+                
+                # If no generated answer, try to extract from raw response
+                if not generated_answer_p1:
+                    generated_answer_p1 = self.extract_answer_from_raw_response(row['raw_response_prompt1'])
+                
+                # Store final answer
+                final_df.at[idx, 'final_answer_generated_by_prompt1'] = generated_answer_p1 if generated_answer_p1 else ''
+                
+                # Calculate similarity if both answers exist
+                if generated_answer_p1 and original_answer:
+                    similarity_p1 = self.calculate_similarity(original_answer, generated_answer_p1)
+                    final_df.at[idx, 'similarity_score_of_answer_of_prompt1'] = similarity_p1
+            
+            # Process Prompt 2
+            if not pd.isna(row['raw_response_prompt2']) and row['raw_response_prompt2'] != '':
+                # Try to get answer from generated column first
+                generated_answer_p2 = row['answer_generated_by_q2'] if not pd.isna(row['answer_generated_by_q2']) else ''
+                
+                # If no generated answer, try to extract from raw response
+                if not generated_answer_p2:
+                    generated_answer_p2 = self.extract_answer_from_raw_response(row['raw_response_prompt2'])
+                
+                # Store final answer
+                final_df.at[idx, 'final_answer_generated_by_prompt2'] = generated_answer_p2 if generated_answer_p2 else ''
+                
+                # Calculate similarity if both answers exist
+                if generated_answer_p2 and original_answer:
+                    similarity_p2 = self.calculate_similarity(original_answer, generated_answer_p2)
+                    final_df.at[idx, 'similarity_score_of_answer_of_prompt2'] = similarity_p2
+            
+            # Print progress every 50 rows
+            if (idx + 1) % 50 == 0:
+                print(f"  Processed {idx + 1}/{len(final_df)} rows...")
+        
+        # Calculate summary statistics
+        p1_answers = final_df['final_answer_generated_by_prompt1'].apply(lambda x: len(str(x).strip()) > 0 if pd.notna(x) else False).sum()
+        p2_answers = final_df['final_answer_generated_by_prompt2'].apply(lambda x: len(str(x).strip()) > 0 if pd.notna(x) else False).sum()
+        
+        p1_avg_sim = final_df['similarity_score_of_answer_of_prompt1'].mean()
+        p2_avg_sim = final_df['similarity_score_of_answer_of_prompt2'].mean()
+        
+        print(f"\nFinal Analysis Summary:")
+        print(f"  Prompt 1 final answers: {p1_answers}/{len(final_df)} ({p1_answers/len(final_df)*100:.1f}%)")
+        print(f"  Prompt 2 final answers: {p2_answers}/{len(final_df)} ({p2_answers/len(final_df)*100:.1f}%)")
+        print(f"  Prompt 1 average similarity: {p1_avg_sim:.3f}")
+        print(f"  Prompt 2 average similarity: {p2_avg_sim:.3f}")
+        
+        return final_df
+    
+    def get_final_analysis_dataframe(self) -> pd.DataFrame:
+        """
+        Get the final analysis dataframe (creates it if not already created)
+        
+        Returns:
+            DataFrame with original columns plus final answers and similarity scores
+        """
+        return self.create_final_analysis_dataframe()
+
+    def save_final_analysis_dataframe(self, filename: str = "final_analysis_df.csv"):
+        """
+        Create and save the final analysis dataframe
+        
+        Args:
+            filename: Name of the file to save the final analysis dataframe
+        """
+        final_df = self.create_final_analysis_dataframe()
+        
+        # Save to CSV
+        final_df.to_csv(filename, index=False, encoding='utf-8')
+        
+        print(f"\n✅ Final analysis dataframe saved to: {filename}")
+        print(f"Dataframe shape: {final_df.shape}")
+        print(f"Columns: {list(final_df.columns)}")
+        
+        return final_df
+
     def save_report(self, filename: str = "quantum_qa_analysis_report.txt"):
         """
         Save the analysis report to a file
@@ -500,7 +616,11 @@ def main():
         # Run complete analysis
         analyzer.save_report()
         
+        # Create and save final analysis dataframe
+        final_df = analyzer.save_final_analysis_dataframe()
+        
         print("\n🎉 Analysis completed successfully!")
+        print(f"Final analysis dataframe created with {len(final_df)} rows and {len(final_df.columns)} columns")
         
     except Exception as e:
         print(f"\n❌ Analysis failed: {e}")
