@@ -47,7 +47,7 @@ def create_few_shot_prompt(examples: List[Dict[str, Any]], base_prompt: str,
             prompt_parts.append(f"Tags: {example['question_tags']}")
         
         prompt_parts.append(f"\n**Answer:**")
-        prompt_parts.append(example['answer_summary'])
+        prompt_parts.append(example['answer_body'])
     
     # Add target question
     prompt_parts.append(f"\n### Target Question:")
@@ -64,8 +64,7 @@ def create_few_shot_prompt(examples: List[Dict[str, Any]], base_prompt: str,
 
 def run_pipeline_on_first_n_rows(filtered_file: str, examples_file: str, 
                                 num_rows: int = 3, start_row: int = 0,
-                                prompt1_file: str = "prompt1.txt", 
-                                prompt2_file: str = "prompt2.txt") -> List[Dict[str, Any]]:
+                                prompt1_file: str = "prompt1.txt") -> List[Dict[str, Any]]:
     """
     Run pipeline on first N rows of the filtered dataset
     """
@@ -86,13 +85,12 @@ def run_pipeline_on_first_n_rows(filtered_file: str, examples_file: str,
     df = pd.read_csv(filtered_file)
     print(f"Dataset shape: {df.shape}")
     
-    # Load prompt templates
-    print("Loading prompt templates...")
+    # Load prompt template
+    print("Loading prompt template...")
     prompt1 = load_prompt_template(prompt1_file)
-    prompt2 = load_prompt_template(prompt2_file)
     
-    if not prompt1 or not prompt2:
-        raise ValueError("Could not load prompt templates")
+    if not prompt1:
+        raise ValueError("Could not load prompt template")
     
     # Initialize Ollama client
     print("Initializing Ollama client...")
@@ -146,10 +144,6 @@ def run_pipeline_on_first_n_rows(filtered_file: str, examples_file: str,
         print("Generating answer with Prompt 1...")
         result1 = client.generate_quantum_answer(question_data, examples, prompt1)
         
-        # Generate answer with prompt 2
-        print("Generating answer with Prompt 2...")
-        result2 = client.generate_quantum_answer(question_data, examples, prompt2)
-        
         # Combine results
         combined_result = {
             'row_number': row_num + 1,
@@ -163,15 +157,9 @@ def run_pipeline_on_first_n_rows(filtered_file: str, examples_file: str,
             'answer_body': row['Answer Body'],
             'answer_date': row['AnswerDate'],
             'answer_generated_by_q1': result1['answer'] if result1['success'] else '',
-            'answer_generated_by_q2': result2['answer'] if result2['success'] else '',
             'raw_response_prompt1': result1.get('raw_response', ''),
-            'raw_response_prompt2': result2.get('raw_response', ''),
             'prompt1_success': result1['success'],
-            'prompt2_success': result2['success'],
             'prompt1_error': result1.get('error', ''),
-            'prompt2_error': result2.get('error', ''),
-            'prompt1_metadata': result1.get('metadata', {}),
-            'prompt2_metadata': result2.get('metadata', {}),
             'generation_timestamp': datetime.now().isoformat()
         }
         
@@ -179,16 +167,11 @@ def run_pipeline_on_first_n_rows(filtered_file: str, examples_file: str,
         
         # Print status
         print(f"Prompt 1 success: {result1['success']}")
-        print(f"Prompt 2 success: {result2['success']}")
         if result1.get('error'):
             print(f"Prompt 1 error: {result1['error']}")
-        if result2.get('error'):
-            print(f"Prompt 2 error: {result2['error']}")
         
         if result1['success']:
-            print(f"Answer 1 preview: {result1['answer'][:100]}...")
-        if result2['success']:
-            print(f"Answer 2 preview: {result2['answer'][:100]}...")
+            print(f"Answer preview: {result1['answer'][:100]}...")
     
     return results
 
@@ -205,7 +188,7 @@ def save_results(results: List[Dict[str, Any]], output_file: str) -> str:
         cleaned_result = result.copy()
         
         # Clean raw response columns - replace newlines and escape quotes
-        for col in ['raw_response_prompt1', 'raw_response_prompt2']:
+        for col in ['raw_response_prompt1']:
             if col in cleaned_result and cleaned_result[col]:
                 # Replace newlines with spaces and escape quotes
                 raw_text = str(cleaned_result[col])
@@ -220,7 +203,7 @@ def save_results(results: List[Dict[str, Any]], output_file: str) -> str:
                 cleaned_result[col] = raw_text
         
         # Also clean other text columns that might have issues
-        text_columns = ['question_title', 'question_body', 'answer_body', 'answer_generated_by_q1', 'answer_generated_by_q2']
+        text_columns = ['question_title', 'question_body', 'answer_body', 'answer_generated_by_q1']
         for col in text_columns:
             if col in cleaned_result and cleaned_result[col]:
                 text = str(cleaned_result[col])
@@ -248,17 +231,14 @@ def save_results(results: List[Dict[str, Any]], output_file: str) -> str:
     
     # Calculate success rates
     prompt1_success = sum(1 for r in results if r['prompt1_success'])
-    prompt2_success = sum(1 for r in results if r['prompt2_success'])
     
     print(f"Prompt 1 success rate: {prompt1_success}/{len(results)} ({prompt1_success/len(results)*100:.1f}%)")
-    print(f"Prompt 2 success rate: {prompt2_success}/{len(results)} ({prompt2_success/len(results)*100:.1f}%)")
     
     return output_file
 
-def run_pipeline_with_tags_preserved(input_file: str, examples_file: str, 
+def run_pipeline_with_tags_preserved(filtered_file: str, examples_file: str, 
                                     num_rows: int = 10, start_row: int = 0,
-                                    prompt1_file: str = "prompt1.txt", 
-                                    prompt2_file: str = "prompt2.txt") -> List[Dict[str, Any]]:
+                                    prompt1_file: str = "prompt1.txt") -> List[Dict[str, Any]]:
     """
     Run pipeline with tags preserved (no tag cleaning)
     """
@@ -266,16 +246,9 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
     print("RUNNING PIPELINE WITH TAGS PRESERVED")
     print("="*60)
     
-    # Step 1: Create filtered dataset with tags preserved
-    print("Step 1: Creating filtered dataset with tags preserved...")
-    from data_filtering import filter_dataset_with_tags
-    filtered_file = "filtered_quantum_dataset_with_tags.csv"
-    stats = filter_dataset_with_tags(input_file, filtered_file)
-    
-    print(f"Filtered dataset created: {filtered_file}")
-    print(f"Original rows: {stats['original_rows']}")
-    print(f"Filtered rows: {stats['filtered_rows']}")
-    print(f"Removed rows: {stats['removed_rows']}")
+    # Step 1: Load filtered dataset
+    print("Step 1: Loading filtered dataset...")
+    print(f"Using filtered dataset: {filtered_file}")
     
     # Step 2: Load examples
     print(f"\nStep 2: Loading few-shot examples...")
@@ -286,21 +259,20 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
     example_qids = [ex['question_id'] for ex in examples]
     print(f"Loaded {len(examples)} examples with QIDs: {example_qids}")
     
-    # Step 3: Load filtered dataset
-    print(f"\nStep 3: Loading filtered dataset...")
+    # Step 2: Load filtered dataset
+    print(f"\nStep 2: Loading filtered dataset...")
     df = pd.read_csv(filtered_file)
     print(f"Dataset shape: {df.shape}")
     
-    # Step 4: Load prompt templates
-    print(f"\nStep 4: Loading prompt templates...")
+    # Step 3: Load prompt template
+    print(f"\nStep 3: Loading prompt template...")
     prompt1 = load_prompt_template(prompt1_file)
-    prompt2 = load_prompt_template(prompt2_file)
     
-    if not prompt1 or not prompt2:
-        raise ValueError("Could not load prompt templates")
+    if not prompt1:
+        raise ValueError("Could not load prompt template")
     
-    # Step 5: Initialize Ollama client
-    print(f"\nStep 5: Initializing Ollama client...")
+    # Step 4: Initialize Ollama client
+    print(f"\nStep 4: Initializing Ollama client...")
     client = OllamaDeepSeek()
     
     # Test connection
@@ -308,8 +280,8 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
     if not test_result['ollama_running'] or not test_result['model_available']:
         raise RuntimeError(f"Ollama not available: {test_result}")
     
-    # Step 6: Select rows to process (excluding example rows)
-    print(f"\nStep 6: Selecting rows {start_row} to {start_row + num_rows - 1} (excluding example rows)...")
+    # Step 5: Select rows to process (excluding example rows)
+    print(f"\nStep 5: Selecting rows {start_row} to {start_row + num_rows - 1} (excluding example rows)...")
     
     # Filter out example rows
     available_rows = df[~df['QuestionId'].isin(example_qids)].copy()
@@ -326,7 +298,7 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
     
     results = []
     
-    # Step 7: Process each row
+    # Step 6: Process each row
     for i, (_, row) in enumerate(selected_rows.iterrows()):
         row_num = start_row + i
         print(f"\n{'='*60}")
@@ -353,10 +325,6 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
         print("Generating answer with Prompt 1...")
         result1 = client.generate_quantum_answer(question_data, examples, prompt1)
         
-        # Generate answer with prompt 2
-        print("Generating answer with Prompt 2...")
-        result2 = client.generate_quantum_answer(question_data, examples, prompt2)
-        
         # Combine results
         combined_result = {
             'row_number': row_num + 1,
@@ -370,15 +338,9 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
             'answer_body': row['Answer Body'],
             'answer_date': row['AnswerDate'],
             'answer_generated_by_q1': result1['answer'] if result1['success'] else '',
-            'answer_generated_by_q2': result2['answer'] if result2['success'] else '',
             'raw_response_prompt1': result1.get('raw_response', ''),
-            'raw_response_prompt2': result2.get('raw_response', ''),
             'prompt1_success': result1['success'],
-            'prompt2_success': result2['success'],
             'prompt1_error': result1.get('error', ''),
-            'prompt2_error': result2.get('error', ''),
-            'prompt1_metadata': result1.get('metadata', {}),
-            'prompt2_metadata': result2.get('metadata', {}),
             'generation_timestamp': datetime.now().isoformat()
         }
         
@@ -386,16 +348,11 @@ def run_pipeline_with_tags_preserved(input_file: str, examples_file: str,
         
         # Print status
         print(f"Prompt 1 success: {result1['success']}")
-        print(f"Prompt 2 success: {result2['success']}")
         if result1.get('error'):
             print(f"Prompt 1 error: {result1['error']}")
-        if result2.get('error'):
-            print(f"Prompt 2 error: {result2['error']}")
         
         if result1['success']:
-            print(f"Answer 1 preview: {result1['answer'][:100]}...")
-        if result2['success']:
-            print(f"Answer 2 preview: {result2['answer'][:100]}...")
+            print(f"Answer preview: {result1['answer'][:100]}...")
     
     return results
 
@@ -404,7 +361,7 @@ def main():
     Main function
     """
     # Configuration
-    filtered_file = "filtered_quantum_dataset.csv"
+    filtered_file = "filtered_quantum_dataset_with_valid_answers.csv"
     examples_file = "few_shot_examples.json"
     num_rows = 3
     start_row = 0
@@ -434,22 +391,22 @@ def main_with_tags():
     Main function for running with tags preserved
     """
     # Configuration
-    input_file = "Quantum_Dataset 26-06-2024.csv"
+    filtered_file = "filtered_quantum_dataset_with_valid_answers.csv"
     examples_file = "few_shot_examples.json"
-    num_rows = 200
+    num_rows = 263
     start_row = 0
     
     try:
         # Run pipeline with tags preserved
         results = run_pipeline_with_tags_preserved(
-            input_file=input_file,
+            filtered_file=filtered_file,
             examples_file=examples_file,
             num_rows=num_rows,
             start_row=start_row
         )
         
         # Save results
-        output_file = f"generated_answers_with_tags_first_200_rows.csv"
+        output_file = f"generated_answers.csv"
         save_results(results, output_file)
         
         print(f"\nPipeline completed successfully!")
@@ -459,9 +416,7 @@ def main_with_tags():
         print(f"\nSUMMARY:")
         print(f"Total questions processed: {len(results)}")
         prompt1_success = sum(1 for r in results if r['prompt1_success'])
-        prompt2_success = sum(1 for r in results if r['prompt2_success'])
         print(f"Prompt 1 success: {prompt1_success}/{len(results)} ({prompt1_success/len(results)*100:.1f}%)")
-        print(f"Prompt 2 success: {prompt2_success}/{len(results)} ({prompt2_success/len(results)*100:.1f}%)")
         
     except Exception as e:
         print(f"\nPipeline failed with error: {e}")

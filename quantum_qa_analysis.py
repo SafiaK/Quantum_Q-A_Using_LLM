@@ -20,7 +20,7 @@ class QuantumQAAnalyzer:
     Comprehensive analyzer for quantum Q&A dataset
     """
     
-    def __init__(self, csv_file: str = "generated_answers_with_tags_first_200_rows.csv"):
+    def __init__(self, csv_file: str = "generated_answers_with_tags_first_2_rows.csv"):
         """
         Initialize the analyzer with the dataset
         
@@ -97,32 +97,24 @@ class QuantumQAAnalyzer:
         
         # Count successful responses (non-empty raw responses)
         prompt1_success = self.df['raw_response_prompt1'].notna() & (self.df['raw_response_prompt1'] != '')
-        prompt2_success = self.df['raw_response_prompt2'].notna() & (self.df['raw_response_prompt2'] != '')
         
         # Count JSON parsing success (based on success flags)
         prompt1_json_success = self.df['prompt1_success'].sum()
-        prompt2_json_success = self.df['prompt2_success'].sum()
         
         # Calculate rates
         prompt1_raw_rate = prompt1_success.sum() / total_rows * 100
-        prompt2_raw_rate = prompt2_success.sum() / total_rows * 100
         prompt1_json_rate = prompt1_json_success / total_rows * 100
-        prompt2_json_rate = prompt2_json_success / total_rows * 100
         
-        # Combined success (at least one prompt successful)
-        combined_success = (prompt1_success | prompt2_success).sum()
+        # Combined success (same as prompt1 since we only have one prompt)
+        combined_success = prompt1_success.sum()
         combined_rate = combined_success / total_rows * 100
         
         analysis = {
             'total_rows': total_rows,
             'prompt1_raw_responses': prompt1_success.sum(),
-            'prompt2_raw_responses': prompt2_success.sum(),
             'prompt1_json_success': prompt1_json_success,
-            'prompt2_json_success': prompt2_json_success,
             'prompt1_raw_rate': prompt1_raw_rate,
-            'prompt2_raw_rate': prompt2_raw_rate,
             'prompt1_json_rate': prompt1_json_rate,
-            'prompt2_json_rate': prompt2_json_rate,
             'combined_success': combined_success,
             'combined_rate': combined_rate
         }
@@ -131,10 +123,8 @@ class QuantumQAAnalyzer:
         print(f"Total rows processed: {total_rows}")
         print(f"\nRaw Response Analysis:")
         print(f"  Prompt 1 raw responses: {prompt1_success.sum()}/{total_rows} ({prompt1_raw_rate:.1f}%)")
-        print(f"  Prompt 2 raw responses: {prompt2_success.sum()}/{total_rows} ({prompt2_raw_rate:.1f}%)")
         print(f"\nJSON Parsing Success:")
         print(f"  Prompt 1 JSON success: {prompt1_json_success}/{total_rows} ({prompt1_json_rate:.1f}%)")
-        print(f"  Prompt 2 JSON success: {prompt2_json_success}/{total_rows} ({prompt2_json_rate:.1f}%)")
         print(f"\nCombined Success:")
         print(f"  At least one successful: {combined_success}/{total_rows} ({combined_rate:.1f}%)")
         
@@ -256,25 +246,13 @@ class QuantumQAAnalyzer:
         print("="*60)
         
         results = {
-            'prompt1_analysis': {},
-            'prompt2_analysis': {},
-            'comparison_stats': {}
+            'prompt1_analysis': {}
         }
         
         # Analyze Prompt 1
         print("\nAnalyzing Prompt 1 answers...")
         prompt1_results = self._analyze_prompt_answers('prompt1', 'raw_response_prompt1', 'answer_generated_by_q1')
         results['prompt1_analysis'] = prompt1_results
-        
-        # Analyze Prompt 2
-        print("\nAnalyzing Prompt 2 answers...")
-        prompt2_results = self._analyze_prompt_answers('prompt2', 'raw_response_prompt2', 'answer_generated_by_q2')
-        results['prompt2_analysis'] = prompt2_results
-        
-        # Comparison statistics
-        print("\nGenerating comparison statistics...")
-        comparison_stats = self._generate_comparison_stats(prompt1_results, prompt2_results)
-        results['comparison_stats'] = comparison_stats
         
         return results
     
@@ -370,52 +348,6 @@ class QuantumQAAnalyzer:
         
         return results
     
-    def _generate_comparison_stats(self, prompt1_results: Dict, prompt2_results: Dict) -> Dict:
-        """
-        Generate comparison statistics between the two prompts
-        
-        Args:
-            prompt1_results: Analysis results for prompt 1
-            prompt2_results: Analysis results for prompt 2
-            
-        Returns:
-            Dictionary containing comparison statistics
-        """
-        stats = {
-            'prompt1_better_similarity': 0,
-            'prompt2_better_similarity': 0,
-            'tie_similarity': 0,
-            'avg_similarity_diff': 0,
-            'prompt1_extraction_rate': prompt1_results['extraction_rate'],
-            'prompt2_extraction_rate': prompt2_results['extraction_rate']
-        }
-        
-        # Compare similarities where both prompts have data
-        sim1 = prompt1_results['similarities']
-        sim2 = prompt2_results['similarities']
-        
-        if sim1 and sim2:
-            min_len = min(len(sim1), len(sim2))
-            if min_len > 0:
-                for i in range(min_len):
-                    if sim1[i] > sim2[i]:
-                        stats['prompt1_better_similarity'] += 1
-                    elif sim2[i] > sim1[i]:
-                        stats['prompt2_better_similarity'] += 1
-                    else:
-                        stats['tie_similarity'] += 1
-                
-                stats['avg_similarity_diff'] = np.mean(sim1[:min_len]) - np.mean(sim2[:min_len])
-        
-        print(f"\nComparison Statistics:")
-        print(f"  Prompt 1 better similarity: {stats['prompt1_better_similarity']}")
-        print(f"  Prompt 2 better similarity: {stats['prompt2_better_similarity']}")
-        print(f"  Tie similarity: {stats['tie_similarity']}")
-        print(f"  Average similarity difference: {stats['avg_similarity_diff']:.3f}")
-        print(f"  Prompt 1 extraction rate: {stats['prompt1_extraction_rate']:.1f}%")
-        print(f"  Prompt 2 extraction rate: {stats['prompt2_extraction_rate']:.1f}%")
-        
-        return stats
     
     def generate_detailed_report(self) -> str:
         """
@@ -444,11 +376,9 @@ class QuantumQAAnalyzer:
 
 ### Raw Response Availability
 - **Prompt 1**: {success_analysis['prompt1_raw_responses']}/{success_analysis['total_rows']} ({success_analysis['prompt1_raw_rate']:.1f}%)
-- **Prompt 2**: {success_analysis['prompt2_raw_responses']}/{success_analysis['total_rows']} ({success_analysis['prompt2_raw_rate']:.1f}%)
 
 ### JSON Parsing Success
 - **Prompt 1**: {success_analysis['prompt1_json_success']}/{success_analysis['total_rows']} ({success_analysis['prompt1_json_rate']:.1f}%)
-- **Prompt 2**: {success_analysis['prompt2_json_success']}/{success_analysis['total_rows']} ({success_analysis['prompt2_json_rate']:.1f}%)
 
 ### Combined Success
 - **At least one successful**: {success_analysis['combined_success']}/{success_analysis['total_rows']} ({success_analysis['combined_rate']:.1f}%)
@@ -462,18 +392,6 @@ class QuantumQAAnalyzer:
 - **Median Similarity**: {quality_analysis['prompt1_analysis']['median_similarity']:.3f}
 - **Similarity Range**: {quality_analysis['prompt1_analysis']['min_similarity']:.3f} - {quality_analysis['prompt1_analysis']['max_similarity']:.3f}
 
-### Prompt 2 Quality Metrics
-- **Total Processed**: {quality_analysis['prompt2_analysis']['total_processed']}
-- **Answer Extraction Success**: {quality_analysis['prompt2_analysis']['extraction_success']} ({quality_analysis['prompt2_analysis']['extraction_rate']:.1f}%)
-- **Average Similarity to Original**: {quality_analysis['prompt2_analysis']['avg_similarity']:.3f}
-- **Median Similarity**: {quality_analysis['prompt2_analysis']['median_similarity']:.3f}
-- **Similarity Range**: {quality_analysis['prompt2_analysis']['min_similarity']:.3f} - {quality_analysis['prompt2_analysis']['max_similarity']:.3f}
-
-### Prompt Comparison
-- **Prompt 1 Better Similarity**: {quality_analysis['comparison_stats']['prompt1_better_similarity']} cases
-- **Prompt 2 Better Similarity**: {quality_analysis['comparison_stats']['prompt2_better_similarity']} cases
-- **Tie Similarity**: {quality_analysis['comparison_stats']['tie_similarity']} cases
-- **Average Similarity Difference**: {quality_analysis['comparison_stats']['avg_similarity_diff']:.3f}
 
 
 ---
@@ -498,9 +416,7 @@ class QuantumQAAnalyzer:
         
         # Initialize new columns
         final_df['final_answer_generated_by_prompt1'] = ''
-        final_df['final_answer_generated_by_prompt2'] = ''
         final_df['similarity_score_of_answer_of_prompt1'] = 0.0
-        final_df['similarity_score_of_answer_of_prompt2'] = 0.0
         
         print(f"Processing {len(final_df)} rows for final analysis...")
         
@@ -525,22 +441,6 @@ class QuantumQAAnalyzer:
                     similarity_p1 = self.calculate_similarity(original_answer, generated_answer_p1)
                     final_df.at[idx, 'similarity_score_of_answer_of_prompt1'] = similarity_p1
             
-            # Process Prompt 2
-            if not pd.isna(row['raw_response_prompt2']) and row['raw_response_prompt2'] != '':
-                # Try to get answer from generated column first
-                generated_answer_p2 = row['answer_generated_by_q2'] if not pd.isna(row['answer_generated_by_q2']) else ''
-                
-                # If no generated answer, try to extract from raw response
-                if not generated_answer_p2:
-                    generated_answer_p2 = self.extract_answer_from_raw_response(row['raw_response_prompt2'])
-                
-                # Store final answer
-                final_df.at[idx, 'final_answer_generated_by_prompt2'] = generated_answer_p2 if generated_answer_p2 else ''
-                
-                # Calculate similarity if both answers exist
-                if generated_answer_p2 and original_answer:
-                    similarity_p2 = self.calculate_similarity(original_answer, generated_answer_p2)
-                    final_df.at[idx, 'similarity_score_of_answer_of_prompt2'] = similarity_p2
             
             # Print progress every 50 rows
             if (idx + 1) % 50 == 0:
@@ -548,16 +448,12 @@ class QuantumQAAnalyzer:
         
         # Calculate summary statistics
         p1_answers = final_df['final_answer_generated_by_prompt1'].apply(lambda x: len(str(x).strip()) > 0 if pd.notna(x) else False).sum()
-        p2_answers = final_df['final_answer_generated_by_prompt2'].apply(lambda x: len(str(x).strip()) > 0 if pd.notna(x) else False).sum()
         
         p1_avg_sim = final_df['similarity_score_of_answer_of_prompt1'].mean()
-        p2_avg_sim = final_df['similarity_score_of_answer_of_prompt2'].mean()
         
         print(f"\nFinal Analysis Summary:")
         print(f"  Prompt 1 final answers: {p1_answers}/{len(final_df)} ({p1_answers/len(final_df)*100:.1f}%)")
-        print(f"  Prompt 2 final answers: {p2_answers}/{len(final_df)} ({p2_answers/len(final_df)*100:.1f}%)")
         print(f"  Prompt 1 average similarity: {p1_avg_sim:.3f}")
-        print(f"  Prompt 2 average similarity: {p2_avg_sim:.3f}")
         
         return final_df
     
