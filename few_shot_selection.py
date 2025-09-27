@@ -72,7 +72,7 @@ def create_few_shot_prompt(examples: List[Dict[str, Any]], base_prompt: str,
             prompt_parts.append(f"Tags: {example['question_tags']}")
         
         prompt_parts.append(f"\n**Answer:**")
-        prompt_parts.append(example['answer_summary'])
+        prompt_parts.append(example['answer_body'])
     
     # Add target question
     prompt_parts.append(f"\n### Target Question:")
@@ -131,8 +131,7 @@ def select_diverse_examples(df: pd.DataFrame, num_examples: int = 2) -> List[Dic
                 'question_body': cleaned_question['body'],
                 'question_tags': cleaned_question['tags'],
                 'answer_body': cleaned_answer,
-                'question_summary': create_question_summary(cleaned_question),
-                'answer_summary': create_answer_summary(cleaned_answer)
+            
             }
             
             examples.append(example)
@@ -196,7 +195,7 @@ if __name__ == "__main__":
     
     # Load a sample of the dataset for testing
     try:
-        df = pd.read_csv("filtered_quantum_dataset.csv")
+        df = pd.read_csv("filtered_quantum_dataset_with_valid_answers.csv")
         print(f"Loaded dataset with {len(df)} rows")
         
         # Select examples
@@ -214,7 +213,6 @@ if __name__ == "__main__":
         for i, example in enumerate(examples, 1):
             print(f"\nExample {i}:")
             print(f"Question: {example['question_title']}")
-            print(f"Answer: {example['answer_summary'][:200]}...")
             print(f"Tags: {example['question_tags']}")
             
     except FileNotFoundError:

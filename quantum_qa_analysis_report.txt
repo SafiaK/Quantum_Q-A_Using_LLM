@@ -2,43 +2,29 @@
 # Quantum Q&A Dataset Analysis Report
 
 ## Dataset Overview
-- **Total Rows**: 200
-- **Analysis Date**: 2025-09-25 23:03:28
+- **Total Rows**: 263
+- **Analysis Date**: 2025-09-27 07:30:13
 
 ## Success Rate Analysis
 
 ### Raw Response Availability
-- **Prompt 1**: 200/200 (100.0%)
-- **Prompt 2**: 200/200 (100.0%)
+- **Prompt 1**: 260/263 (98.9%)
 
 ### JSON Parsing Success
-- **Prompt 1**: 108/200 (54.0%)
-- **Prompt 2**: 109/200 (54.5%)
+- **Prompt 1**: 78/263 (29.7%)
 
 ### Combined Success
-- **At least one successful**: 200/200 (100.0%)
+- **At least one successful**: 260/263 (98.9%)
 
 ## Answer Quality Analysis
 
 ### Prompt 1 Quality Metrics
-- **Total Processed**: 200
-- **Answer Extraction Success**: 200 (100.0%)
-- **Average Similarity to Original**: 0.618
-- **Median Similarity**: 0.619
-- **Similarity Range**: 0.221 - 0.852
+- **Total Processed**: 260
+- **Answer Extraction Success**: 260 (100.0%)
+- **Average Similarity to Original**: 0.644
+- **Median Similarity**: 0.667
+- **Similarity Range**: 0.269 - 0.885
 
-### Prompt 2 Quality Metrics
-- **Total Processed**: 200
-- **Answer Extraction Success**: 200 (100.0%)
-- **Average Similarity to Original**: 0.627
-- **Median Similarity**: 0.641
-- **Similarity Range**: 0.250 - 0.893
-
-### Prompt Comparison
-- **Prompt 1 Better Similarity**: 26 cases
-- **Prompt 2 Better Similarity**: 34 cases
-- **Tie Similarity**: 0 cases
-- **Average Similarity Difference**: -0.009
 
 
 ---

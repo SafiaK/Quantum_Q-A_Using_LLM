@@ -221,8 +221,8 @@ def analyze_dataset(file_path: str) -> Dict[str, Any]:
     return stats
 
 if __name__ == "__main__":
-    input_file = "Quantum_Dataset 26-06-2024.csv"
-    output_file = "filtered_quantum_dataset.csv"
+    input_file = "quantum_df_with_valid_answers.csv"
+    output_file = "filtered_quantum_dataset_with_valid_answers.csv"
     
     # Filter the dataset
     stats = filter_dataset(input_file, output_file)
